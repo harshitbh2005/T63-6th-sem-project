@@ -1,4 +1,4 @@
-package com.vaultAI.backend;
+package com.vaultai.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
