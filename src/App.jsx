@@ -15,6 +15,8 @@ import Portfolio from './pages/Portfolio.jsx';
 import Watchlist from './pages/Watchlist.jsx';
 import Profile from './pages/Profile.jsx';
 import SettingsPage from './pages/Settings.jsx';
+import { mlEngine } from './services/mlEngine';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Data Generation with Prediction
 const generateData = () => {
@@ -38,11 +40,42 @@ const generateData = () => {
   return base;
 };
 
+// --- Animation Variants ---
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, ease: "easeOut" }
+};
+
+const pageVariants = {
+  initial: { opacity: 0, x: -10 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 10 },
+  transition: { duration: 0.3 }
+};
+
+function PageWrapper({ children }) {
+  return (
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={pageVariants.transition}
+      style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 // --- Sub-components ---
 
 function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isHovered, setIsHovered] = useState(false);
+  
   const navItems = [
     { icon: Home, path: '/', label: 'Vault' },
     { icon: List, path: '/markets', label: 'Markets' },
@@ -53,26 +86,62 @@ function Sidebar() {
   ];
 
   return (
-    <aside className="sidebar glass-panel">
-      <div className="sidebar-logo">
-        <Brain size={24} color="white" />
+    <motion.aside 
+      className="sidebar glass-panel"
+      initial={false}
+      animate={{ width: isHovered ? 260 : 76 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      style={{ overflow: 'hidden', paddingLeft: isHovered ? '20px' : '14px' }}
+    >
+      <div className="sidebar-logo-container">
+        <div className="sidebar-logo">
+          <Brain size={24} color="white" />
+        </div>
+        <motion.span 
+          className="sidebar-brand"
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          VaultAI
+        </motion.span>
       </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '20px' }}>
         {navItems.map(item => (
-          <div 
+          <motion.div 
             key={item.path}
             className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
             onClick={() => navigate(item.path)}
-            title={item.label}
+            whileHover={{ x: 5, backgroundColor: "var(--bg-panel-hover)" }}
+            whileTap={{ scale: 0.98 }}
           >
-            <item.icon size={20} />
-          </div>
+            <item.icon size={22} />
+            <motion.span 
+              className="nav-label"
+              animate={{ opacity: isHovered ? 1 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {item.label}
+            </motion.span>
+          </motion.div>
         ))}
       </div>
-      <div className="nav-item">
-        <Bell size={20} />
-      </div>
-    </aside>
+      <motion.div 
+        className="nav-item"
+        whileHover={{ x: 5, backgroundColor: "var(--bg-panel-hover)" }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <Bell size={22} />
+        <motion.span 
+          className="nav-label"
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          Notifications
+        </motion.span>
+      </motion.div>
+    </motion.aside>
   );
 }
 
@@ -111,29 +180,72 @@ function AIControlPanel() {
 }
 
 function AIInsightsBox() {
+  const [insight, setInsight] = useState("Scanning markets for yield opportunities...");
+  const [metrics, setMetrics] = useState({ return: 0, risk: 0 });
+
+  useEffect(() => {
+    // Simulate ML insight generation
+    const mockPortfolio = { assets: [{ name: 'ETH', yield: '12.5%', risk: 'Low' }] };
+    setTimeout(() => {
+      setInsight(mlEngine.getInsight(mockPortfolio, 'BULLISH'));
+      setMetrics({ 
+        return: mlEngine.predictMarket('ETH').confidence / 50, 
+        risk: (Math.random() * 15 + 5).toFixed(0) 
+      });
+    }, 0);
+  }, []);
+
+  const explainAI = JSON.parse(localStorage.getItem('vaultai_explain_ai')) ?? true;
+
   return (
-    <div className="ai-card glass-panel" style={{ marginBottom: '12px' }}>
+    <motion.div 
+      className="ai-card glass-panel" 
+      style={{ marginBottom: '12px' }}
+      {...fadeInUp}
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
       <div className="ai-card-title">
         <Info size={14} color="var(--accent-blue)" /> AI Insight
       </div>
       <div className="insight-text">
-        "ETH yield dropped by 3% in Spark Pool. Reallocating 15% of funds to USDC-EURO high-stability vaults to maintain target growth."
+        {explainAI ? `"${insight}"` : "AI decision-making logs are currently hidden. Enable Explainability in Settings."}
       </div>
       <div style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
         <div className="impact-badge positive">
-          <TrendingUp size={12} /> +1.8% Expected Return
+          <TrendingUp size={12} /> +{metrics.return}% Expected Return
         </div>
         <div className="impact-badge positive">
-          <Shield size={12} /> -20% Risk Reduction
+          <Shield size={12} /> -{metrics.risk}% Risk Reduction
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 function AIActionPanel({ onApply }) {
+  const [recommendation, setRecommendation] = useState({ from: 'XRP', to: 'USDT', reason: 'High volatility' });
+  // eslint-disable-next-line no-unused-vars
+  const [aiConfidence, setAiConfidence] = useState(94.2);
+
+  useEffect(() => {
+    const pred = mlEngine.predictMarket('XRP');
+    setTimeout(() => {
+      setAiConfidence(pred.confidence);
+      if (pred.trend === 'BEARISH') {
+        setRecommendation({ from: 'XRP', to: 'ETH', reason: 'Bearish divergence detected' });
+      }
+    }, 0);
+  }, []);
+
   return (
-    <div className="ai-card glass-panel" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <motion.div 
+      className="ai-card glass-panel" 
+      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      {...fadeInUp}
+      transition={{ delay: 0.1, duration: 0.5 }}
+      whileHover={{ scale: 1.01 }}
+    >
       <div className="ai-card-title">
         <Zap size={14} color="var(--accent-orange)" /> AI Action Panel
       </div>
@@ -144,10 +256,10 @@ function AIActionPanel({ onApply }) {
             RECOMMENDATION
           </div>
           <div style={{ fontSize: '14px', fontWeight: '500', lineHeight: '1.5' }}>
-            Move 20% funds from <span style={{color: 'var(--accent-red)'}}>XRP</span> → <span style={{color: 'var(--accent-green)'}}>USDT</span>
+            Move funds from <span style={{color: 'var(--accent-red)'}}>{recommendation.from}</span> → <span style={{color: 'var(--accent-green)'}}>{recommendation.to}</span>
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>
-            Reason: High volatility detected in XRP/USD pair.
+            Reason: {recommendation.reason}
           </div>
         </div>
         
@@ -158,9 +270,9 @@ function AIActionPanel({ onApply }) {
       </div>
       
       <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: 'auto' }}>
-        AI confidence: 94.2%
+        AI confidence: {aiConfidence}%
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -172,7 +284,13 @@ function SmartMarketPanel() {
   ];
 
   return (
-    <div className="ai-card glass-panel" style={{ flex: 1 }}>
+    <motion.div 
+      className="ai-card glass-panel" 
+      style={{ flex: 1 }}
+      {...fadeInUp}
+      transition={{ delay: 0.2, duration: 0.5 }}
+      whileHover={{ scale: 1.01 }}
+    >
       <div className="ai-card-title">
         <Activity size={14} color="var(--accent-green)" /> Smart Market Panel
       </div>
@@ -189,14 +307,14 @@ function SmartMarketPanel() {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 // --- Main Pages ---
 
 function VaultDashboard() {
-  const [data, setData] = useState(generateData());
+  const [data] = useState(generateData());
   const [timeRange, setTimeRange] = useState('24H');
   const [toast, setToast] = useState(null);
 
@@ -207,15 +325,23 @@ function VaultDashboard() {
 
   return (
     <div className="main-content">
-      {toast && (
-        <div className="glass-panel" style={{ 
-          position: 'fixed', bottom: '24px', right: '24px', padding: '12px 24px', 
-          background: 'var(--accent-blue)', color: 'white', fontWeight: '700', 
-          borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,210,255,0.4)', zIndex: 100 
-        }}>
-          {toast}
-        </div>
-      )}
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            className="glass-panel" 
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            style={{ 
+              position: 'fixed', bottom: '24px', right: '24px', padding: '12px 24px', 
+              background: 'var(--accent-blue)', color: 'white', fontWeight: '700', 
+              borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,210,255,0.4)', zIndex: 100 
+            }}
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       <AIControlPanel />
       
@@ -265,16 +391,18 @@ function VaultDashboard() {
                   />
                   
                   {/* Prediction Line */}
-                  <Area 
-                    type="monotone" 
-                    dataKey="uv" 
-                    data={data.filter((d, i) => i >= data.length - 11)}
-                    stroke="var(--accent-blue)" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    fill="none"
-                    isAnimationActive={false}
-                  />
+                  {JSON.parse(localStorage.getItem('vaultai_prediction_graph')) !== false && (
+                    <Area 
+                      type="monotone" 
+                      dataKey="uv" 
+                      data={data.filter((d, i) => i >= data.length - 11)}
+                      stroke="var(--accent-blue)" 
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      fill="none"
+                      isAnimationActive={false}
+                    />
+                  )}
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -341,13 +469,19 @@ function VaultDashboard() {
 
         <div className="glass-panel ai-card">
           <div className="ai-card-title">Risk Meter</div>
-          <div style={{ textAlign: 'center', padding: '10px 0', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '32px', fontWeight: '700', color: 'var(--accent-blue)' }}>65<span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>/100</span></div>
-            <div style={{ color: 'var(--accent-orange)', fontWeight: '600', marginTop: '4px', letterSpacing: '1px' }}>MEDIUM RISK</div>
-            <div className="risk-meter-container" style={{ height: '12px', marginTop: '16px' }}>
-              <div className="risk-meter-fill" style={{ width: '65%', background: 'linear-gradient(90deg, var(--accent-green), var(--accent-orange))' }}></div>
+          {JSON.parse(localStorage.getItem('vaultai_risk_breakdown')) !== false ? (
+            <div style={{ textAlign: 'center', padding: '10px 0', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ fontSize: '32px', fontWeight: '700', color: 'var(--accent-blue)' }}>65<span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>/100</span></div>
+              <div style={{ color: 'var(--accent-orange)', fontWeight: '600', marginTop: '4px', letterSpacing: '1px' }}>MEDIUM RISK</div>
+              <div className="risk-meter-container" style={{ height: '12px', marginTop: '16px' }}>
+                <div className="risk-meter-fill" style={{ width: '65%', background: 'linear-gradient(90deg, var(--accent-green), var(--accent-orange))' }}></div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', padding: '20px' }}>
+              Detailed risk metrics are disabled. Enable "Show Risk Breakdown" in Settings to view full analysis.
+            </div>
+          )}
         </div>
 
         <div className="glass-panel ai-card">
@@ -376,7 +510,7 @@ function VaultDashboard() {
 }
 
 function AppShell() {
-  const [balance, setBalance] = useState(21340.50);
+  const [balance] = useState(21340.50);
 
   return (
     <div className="vault-shell">
@@ -401,14 +535,16 @@ function AppShell() {
           </div>
         </div>
         
-        <Routes>
-          <Route path="/" element={<VaultDashboard />} />
-          <Route path="/markets" element={<Markets />} />
-          <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="/watchlist" element={<Watchlist />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={<PageWrapper><VaultDashboard /></PageWrapper>} />
+            <Route path="/markets" element={<PageWrapper><Markets /></PageWrapper>} />
+            <Route path="/portfolio" element={<PageWrapper><Portfolio /></PageWrapper>} />
+            <Route path="/watchlist" element={<PageWrapper><Watchlist /></PageWrapper>} />
+            <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
+            <Route path="/settings" element={<PageWrapper><SettingsPage /></PageWrapper>} />
+          </Routes>
+        </AnimatePresence>
       </div>
     </div>
   );

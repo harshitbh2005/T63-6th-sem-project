@@ -1,12 +1,40 @@
 import React, { useState } from 'react';
 import { 
   Settings, Monitor, Bell, Shield, User, CreditCard, 
-  Key, LogOut, Brain, Zap, Sliders, Info, Cpu
+  Key, LogOut, Brain, Zap, Sliders, Info, Cpu, Activity, TrendingUp
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function SettingsPage() {
   const [autoPilot, setAutoPilot] = useState(true);
   const [riskLevel, setRiskLevel] = useState(65);
+
+  // AI Explainability States
+  const [explainAI, setExplainAI] = useState(() => {
+    const saved = localStorage.getItem('vaultai_explain_ai');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [showRiskBreakdown, setShowRiskBreakdown] = useState(() => {
+    const saved = localStorage.getItem('vaultai_risk_breakdown');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [showPredictionGraph, setShowPredictionGraph] = useState(() => {
+    const saved = localStorage.getItem('vaultai_prediction_graph');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // Sync with LocalStorage
+  React.useEffect(() => {
+    localStorage.setItem('vaultai_explain_ai', JSON.stringify(explainAI));
+  }, [explainAI]);
+
+  React.useEffect(() => {
+    localStorage.setItem('vaultai_risk_breakdown', JSON.stringify(showRiskBreakdown));
+  }, [showRiskBreakdown]);
+
+  React.useEffect(() => {
+    localStorage.setItem('vaultai_prediction_graph', JSON.stringify(showPredictionGraph));
+  }, [showPredictionGraph]);
 
   return (
     <div className="main-content">
@@ -23,12 +51,42 @@ export default function SettingsPage() {
 
       <div className="content-row-full">
         {/* AI System Settings */}
-        <div className="glass-panel ai-card">
+        <motion.div 
+          className="glass-panel ai-card"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          whileHover={{ scale: 1.01 }}
+        >
           <div className="ai-card-title">
             <Cpu size={14} color="var(--accent-blue)" /> Core Logic Engine
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '10px' }}>
+            <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', fontWeight: '700' }}>Operation Mode</div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ 
+                  flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(0, 210, 255, 0.15)', 
+                  border: '1px solid var(--accent-blue)', color: 'white', fontSize: '11px', fontWeight: '700',
+                  textAlign: 'center', cursor: 'default', boxShadow: '0 0 15px rgba(0, 210, 255, 0.1)'
+                }}>
+                  SIMULATION
+                </div>
+                <div style={{ 
+                  flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.03)', 
+                  border: '1px solid rgba(255, 255, 255, 0.05)', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700',
+                  textAlign: 'center', opacity: 0.4, cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'
+                }}>
+                   LIVE MODE
+                </div>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--accent-orange)', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Info size={12} />
+                <span>Note: This system runs in simulated environment for testing.</span>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: '14px', fontWeight: '600' }}>AI Auto-Pilot</div>
@@ -67,10 +125,13 @@ export default function SettingsPage() {
               </select>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Security & Access */}
-        <div className="glass-panel ai-card">
+        <motion.div 
+          className="glass-panel ai-card"
+          whileHover={{ scale: 1.02 }}
+        >
           <div className="ai-card-title">
             <Shield size={14} color="var(--accent-green)" /> Security & Bio-Auth
           </div>
@@ -90,10 +151,13 @@ export default function SettingsPage() {
             ))}
             <button className="ai-btn-secondary" style={{ marginTop: '10px', width: '100%', fontSize: '12px', padding: '10px' }}>Change Access Password</button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Notifications */}
-        <div className="glass-panel ai-card">
+        <motion.div 
+          className="glass-panel ai-card"
+          whileHover={{ scale: 1.02 }}
+        >
           <div className="ai-card-title">
             <Bell size={14} color="var(--accent-orange)" /> Alert Configuration
           </div>
@@ -117,7 +181,81 @@ export default function SettingsPage() {
           <button className="ai-btn-secondary" style={{ marginTop: '20px', width: '100%', color: 'var(--accent-red)', border: '1px solid rgba(255, 62, 94, 0.2)' }}>
             <LogOut size={14} /> Terminate AI Session
           </button>
-        </div>
+        </motion.div>
+
+        {/* AI Explainability Toggle (MARC BOOSTER) */}
+        <motion.div 
+          className="glass-panel ai-card hover-glow" 
+          style={{ border: '1px solid rgba(0, 210, 255, 0.2)' }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="ai-card-title" style={{ color: 'var(--accent-blue)' }}>
+            <Brain size={14} /> AI Explainability & Transparency
+            <span style={{ marginLeft: 'auto', fontSize: '10px', background: 'rgba(0, 210, 255, 0.1)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(0, 210, 255, 0.2)' }}>PRO</span>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginTop: '10px' }}>
+            {[
+              { 
+                label: 'Explain AI Decisions', 
+                desc: 'Real-time text reasoning for rebalances', 
+                state: explainAI, 
+                setter: setExplainAI,
+                icon: Info
+              },
+              { 
+                label: 'Show Risk Breakdown', 
+                desc: 'Detailed matrix of asset vulnerability', 
+                state: showRiskBreakdown, 
+                setter: setShowRiskBreakdown,
+                icon: Activity
+              },
+              { 
+                label: 'Show Prediction Graph', 
+                desc: 'Overlay futurist trends on price charts', 
+                state: showPredictionGraph, 
+                setter: setShowPredictionGraph,
+                icon: TrendingUp
+              }
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                   <div style={{ width: 32, height: 32, borderRadius: '8px', background: 'rgba(255, 255, 255, 0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <item.icon size={16} color="var(--accent-blue)" />
+                   </div>
+                   <div>
+                    <div style={{ fontSize: '13px', fontWeight: '600' }}>{item.label}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.desc}</div>
+                   </div>
+                </div>
+                <button 
+                  onClick={() => item.setter(!item.state)}
+                  style={{ 
+                    width: 40, height: 22, borderRadius: 11, border: 'none', cursor: 'pointer', position: 'relative', 
+                    background: item.state ? 'var(--accent-blue)' : 'rgba(255,255,255,0.05)', 
+                    transition: '0.3s',
+                    boxShadow: item.state ? '0 0 10px rgba(0, 210, 255, 0.3)' : 'none'
+                  }}
+                >
+                  <div style={{ 
+                    width: 16, height: 16, borderRadius: '50%', background: 'white', 
+                    position: 'absolute', top: 3, left: item.state ? 21 : 3, 
+                    transition: '0.3s',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ 
+            marginTop: 'auto', padding: '10px', borderRadius: '8px', 
+            background: 'linear-gradient(90deg, rgba(0, 210, 255, 0.05), transparent)',
+            borderLeft: '2px solid var(--accent-blue)', fontSize: '10px', color: 'var(--text-muted)'
+          }}>
+            Transparency settings apply globally across your VaultAI dashboard interfaces.
+          </div>
+        </motion.div>
       </div>
     </div>
   );

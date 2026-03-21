@@ -8,6 +8,15 @@ import {
   CartesianGrid, XAxis, YAxis, Tooltip
 } from 'recharts';
 
+import { mlEngine } from '../services/mlEngine';
+import { motion } from 'framer-motion';
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 }
+};
+
 const PORTFOLIO_DATA = [
   { name: 'BTC', value: 46.7, color: '#f59e0b', current: 9962.21, recommended: 50.0 },
   { name: 'ETH', value: 37.9, color: 'var(--accent-blue)', current: 8078.84, recommended: 35.0 },
@@ -23,7 +32,8 @@ const HISTORY = [
 ];
 
 export default function Portfolio() {
-  const [activeTab, setActiveTab] = useState('allocation');
+  const [analysis] = useState(mlEngine.analyzePortfolio(PORTFOLIO_DATA));
+  const [optimizedData] = useState(mlEngine.optimizeAllocation(PORTFOLIO_DATA));
 
   return (
     <div className="main-content" style={{ paddingBottom: '24px' }}>
@@ -40,21 +50,33 @@ export default function Portfolio() {
           {/* Summary Cards */}
           <div className="content-row-full" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {[
-              { label: 'Total Value', val: '$21,350.25', sub: '+21.9% all time', col: 'var(--accent-blue)' },
-              { label: 'AI Yield (MTD)', val: '+$840.12', sub: '+4.2% yield', col: 'var(--accent-green)' },
-              { label: 'Risk Score', val: '65/100', sub: 'Medium Risk', col: 'var(--accent-orange)' },
+              { label: 'Total Value', val: `$${analysis.totalValue.toLocaleString()}`, sub: '+21.9% all time', col: 'var(--accent-blue)' },
+              { label: 'AI Yield (MTD)', val: `+${analysis.avgYield}%`, sub: 'Projected yield', col: 'var(--accent-green)' },
+              { label: 'Risk Score', val: `${analysis.riskScore}/100`, sub: `${analysis.riskLevel} RISK`, col: analysis.riskScore > 60 ? 'var(--accent-orange)' : 'var(--accent-green)' },
               { label: 'Efficiency', val: '94%', sub: 'High Optimization', col: 'var(--accent-blue)' },
             ].map((stat, i) => (
-              <div key={i} className="glass-panel ai-card" style={{ padding: '16px' }}>
+              <motion.div 
+                key={i} 
+                className="glass-panel ai-card" 
+                style={{ padding: '16px' }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ scale: 1.03 }}
+              >
                 <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{stat.label}</div>
                 <div style={{ fontSize: '20px', fontWeight: '700', margin: '4px 0' }}>{stat.val}</div>
                 <div style={{ fontSize: '11px', color: stat.col }}>{stat.sub}</div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
           {/* Allocation Comparison */}
-          <div className="glass-panel ai-card">
+          <motion.div 
+            className="glass-panel ai-card"
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
             <div className="ai-card-title">
               <Layers size={14} color="var(--accent-blue)" /> Core Allocation & AI Recommendations
             </div>
@@ -63,8 +85,16 @@ export default function Portfolio() {
               <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', padding: '0 12px', marginBottom: '8px', fontSize: '10px', color: 'var(--text-muted)' }}>
                 <span>ASSET</span> <span>CURRENT WEIGHT</span> <span>AI TARGET</span>
               </div>
-              {PORTFOLIO_DATA.map((item, i) => (
-                <div key={i} className="smart-item" style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', cursor: 'default' }}>
+              {optimizedData.map((item, i) => (
+                <motion.div 
+                  key={i} 
+                  className="smart-item" 
+                  style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', cursor: 'default' }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + i * 0.05 }}
+                  whileHover={{ backgroundColor: "var(--bg-panel-hover)" }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ width: 8, height: 8, borderRadius: '2px', background: item.color }}></div>
                     <span style={{ fontWeight: '600' }}>{item.name}</span>
@@ -74,43 +104,58 @@ export default function Portfolio() {
                       <span>{item.value}%</span>
                     </div>
                     <div className="risk-meter-container" style={{ height: '4px' }}>
-                      <div className="risk-meter-fill" style={{ width: `${item.value}%`, background: item.color }}></div>
+                      <motion.div 
+                        className="risk-meter-fill" 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${item.value}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        style={{ background: item.color }}
+                      ></motion.div>
                     </div>
                   </div>
                   <div style={{ paddingRight: '20px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                      <span>{item.recommended}%</span>
+                      <span>{item.recommended.toFixed(1)}%</span>
                       {item.recommended > item.value ? 
                         <span style={{color: 'var(--accent-green)'}}>Increase</span> : 
                         <span style={{color: 'var(--accent-red)'}}>Reduce</span>}
                     </div>
                     <div className="risk-meter-container" style={{ height: '4px', background: 'rgba(255,255,255,0.02)' }}>
-                      <div className="risk-meter-fill" style={{ width: `${item.recommended}%`, background: item.color, opacity: 0.4 }}></div>
+                      <motion.div 
+                        className="risk-meter-fill" 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${item.recommended}%` }}
+                        transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                        style={{ background: item.color, opacity: 0.4 }}
+                      ></motion.div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Right Info Panel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div className="glass-panel ai-card">
+          <motion.div 
+            className="glass-panel ai-card"
+            whileHover={{ scale: 1.02 }}
+          >
             <div className="ai-card-title">
               <Shield size={14} color="var(--accent-blue)" /> Risk Analysis
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '36px', fontWeight: '800', color: 'var(--accent-blue)' }}>65</div>
-              <div style={{ color: 'var(--accent-orange)', fontWeight: '600', fontSize: '12px' }}>MODERATE RISK</div>
+              <div style={{ fontSize: '36px', fontWeight: '800', color: 'var(--accent-blue)' }}>{analysis.riskScore}</div>
+              <div style={{ color: analysis.riskScore > 60 ? 'var(--accent-orange)' : 'var(--accent-green)', fontWeight: '600', fontSize: '12px' }}>{analysis.riskLevel} RISK</div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                Your portfolio is slightly over-exposed to BTC. AI suggests rebalancing to Stablecoins.
+                {mlEngine.getInsight({ assets: PORTFOLIO_DATA }, 'BULLISH')}
               </div>
               <div className="risk-meter-container" style={{ height: '10px', marginTop: '16px' }}>
-                <div className="risk-meter-fill" style={{ width: '65%', background: 'linear-gradient(90deg, var(--accent-green) 0%, var(--accent-orange) 50%, var(--accent-red) 100%)' }}></div>
+                <div className="risk-meter-fill" style={{ width: `${analysis.riskScore}%`, background: 'linear-gradient(90deg, var(--accent-green) 0%, var(--accent-orange) 50%, var(--accent-red) 100%)' }}></div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           <div className="glass-panel ai-card" style={{ flex: 1 }}>
             <div className="ai-card-title">
