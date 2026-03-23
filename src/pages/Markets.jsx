@@ -6,7 +6,28 @@ export default function Markets() {
   const [search, setSearch] = useState('');
   const [markets, setMarkets] = useState([]);
 
-  // ✅ Fetch from Spring Boot backend
+  // ✅ Add to watchlist function
+  const addToWatchlist = (item) => {
+    fetch("http://localhost:8080/api/watchlist", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        symbol: item.symbol,
+        name: item.name,
+        price: item.price
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log("Added:", data);
+      alert("Added to Watchlist");
+    })
+    .catch(err => console.error(err));
+  };
+
+  // ✅ Fetch from backend
   useEffect(() => {
     fetch("http://localhost:8080/api/crypto")
       .then(res => res.json())
@@ -27,7 +48,7 @@ export default function Markets() {
       .catch(err => console.error("Backend fetch error:", err));
   }, []);
 
-  // 🔍 Search filter
+  // 🔍 Filter
   const filteredData = markets.filter(item =>
     item.symbol.toLowerCase().includes(search.toLowerCase()) ||
     item.name.toLowerCase().includes(search.toLowerCase())
@@ -36,7 +57,7 @@ export default function Markets() {
   return (
     <div className="main-content" style={{ display: 'flex', flexDirection: 'column' }}>
 
-      {/* Header + LEFT search (only one) */}
+      {/* Header */}
       <div style={{ marginBottom: '20px' }}>
         <h2>Market Page</h2>
 
@@ -68,6 +89,7 @@ export default function Markets() {
               <th>24h Change</th>
               <th>AI Yield</th>
               <th>Risk</th>
+              <th>Action</th>
             </tr>
           </thead>
 
@@ -75,29 +97,41 @@ export default function Markets() {
             {filteredData.map((item) => (
               <motion.tr key={item.id}>
 
-                {/* Asset */}
                 <td style={{ padding: '10px' }}>
                   <strong>{item.symbol}</strong>
                   <div style={{ fontSize: '12px', color: 'gray' }}>{item.name}</div>
                 </td>
 
-                {/* Price */}
                 <td>${item.price}</td>
 
-                {/* Change */}
                 <td style={{ color: item.isPos ? 'green' : 'red' }}>
                   {item.isPos ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                   {item.change}
                 </td>
 
-                {/* Yield */}
                 <td style={{ color: 'cyan' }}>
                   <Zap size={12} /> {item.yield}
                 </td>
 
-                {/* Risk */}
                 <td style={{ color: 'orange' }}>
                   <Shield size={12} /> {item.risk}
+                </td>
+
+                {/* ✅ Add button */}
+                <td>
+                  <button
+                    onClick={() => addToWatchlist(item)}
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '5px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: '#00bcd4',
+                      color: 'black'
+                    }}
+                  >
+                    Add
+                  </button>
                 </td>
 
               </motion.tr>
