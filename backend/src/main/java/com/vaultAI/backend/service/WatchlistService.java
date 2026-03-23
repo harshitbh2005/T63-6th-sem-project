@@ -15,7 +15,7 @@ public class WatchlistService {
         this.repository = repository;
     }
 
-    public Watchlist addToWatchlist(Watchlist watchlist) {
+    public Watchlist add(Watchlist watchlist) {
         return repository.save(watchlist);
     }
 
@@ -25,5 +25,10 @@ public class WatchlistService {
 
     public void delete(Long id) {
         repository.deleteById(id);
+    }
+
+
+    public int count() {
+        return repository.findAll().size();
     }
 }

@@ -19,7 +19,7 @@ public class WatchlistController {
 
     @PostMapping
     public Watchlist add(@RequestBody Watchlist watchlist) {
-        return service.addToWatchlist(watchlist);
+        return service.add(watchlist);
     }
 
     @GetMapping
