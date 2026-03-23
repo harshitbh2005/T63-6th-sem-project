@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, List, BarChart2, Star, Search, User, Settings, X, Plus, 
@@ -71,19 +71,19 @@ function PageWrapper({ children }) {
 
 // --- Sub-components ---
 
-function Sidebar() {
+const Sidebar = memo(function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isHovered, setIsHovered] = useState(false);
   
-  const navItems = [
+  const navItems = useMemo(() => [
     { icon: Home, path: '/', label: 'Vault' },
     { icon: List, path: '/markets', label: 'Markets' },
     { icon: BarChart2, path: '/portfolio', label: 'Portfolio' },
     { icon: Star, path: '/watchlist', label: 'Watchlist' },
     { icon: User, path: '/profile', label: 'Profile' },
     { icon: Settings, path: '/settings', label: 'Settings' },
-  ];
+  ], []);
 
   return (
     <motion.aside 
@@ -93,7 +93,7 @@ function Sidebar() {
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      style={{ overflow: 'hidden', paddingLeft: isHovered ? '20px' : '14px' }}
+      style={{ overflow: 'hidden', paddingLeft: isHovered ? '20px' : '14px', willChange: 'width' }}
     >
       <div className="sidebar-logo-container">
         <div className="sidebar-logo">
@@ -143,9 +143,9 @@ function Sidebar() {
       </motion.div>
     </motion.aside>
   );
-}
+});
 
-function AIControlPanel() {
+const AIControlPanel = memo(function AIControlPanel() {
   return (
     <div className="ai-header glass-panel" style={{ padding: '0 20px', marginBottom: '12px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
@@ -177,30 +177,29 @@ function AIControlPanel() {
       </button>
     </div>
   );
-}
+});
 
-function AIInsightsBox() {
+const AIInsightsBox = memo(function AIInsightsBox() {
   const [insight, setInsight] = useState("Scanning markets for yield opportunities...");
   const [metrics, setMetrics] = useState({ return: 0, risk: 0 });
 
   useEffect(() => {
     // Simulate ML insight generation
     const mockPortfolio = { assets: [{ name: 'ETH', yield: '12.5%', risk: 'Low' }] };
-    setTimeout(() => {
-      setInsight(mlEngine.getInsight(mockPortfolio, 'BULLISH'));
-      setMetrics({ 
-        return: mlEngine.predictMarket('ETH').confidence / 50, 
-        risk: (Math.random() * 15 + 5).toFixed(0) 
-      });
-    }, 0);
+    const pred = mlEngine.predictMarket('ETH');
+    setInsight(mlEngine.getInsight(mockPortfolio, 'BULLISH'));
+    setMetrics({ 
+      return: pred.confidence / 50, 
+      risk: (Math.random() * 15 + 5).toFixed(0) 
+    });
   }, []);
 
-  const explainAI = JSON.parse(localStorage.getItem('vaultai_explain_ai')) ?? true;
+  const explainAI = useMemo(() => JSON.parse(localStorage.getItem('vaultai_explain_ai')) ?? true, []);
 
   return (
     <motion.div 
       className="ai-card glass-panel" 
-      style={{ marginBottom: '12px' }}
+      style={{ marginBottom: '12px', willChange: 'transform, opacity' }}
       {...fadeInUp}
       whileHover={{ scale: 1.01 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -221,27 +220,25 @@ function AIInsightsBox() {
       </div>
     </motion.div>
   );
-}
+});
 
-function AIActionPanel({ onApply }) {
+const AIActionPanel = memo(function AIActionPanel({ onApply }) {
   const [recommendation, setRecommendation] = useState({ from: 'XRP', to: 'USDT', reason: 'High volatility' });
   // eslint-disable-next-line no-unused-vars
   const [aiConfidence, setAiConfidence] = useState(94.2);
 
   useEffect(() => {
     const pred = mlEngine.predictMarket('XRP');
-    setTimeout(() => {
-      setAiConfidence(pred.confidence);
-      if (pred.trend === 'BEARISH') {
-        setRecommendation({ from: 'XRP', to: 'ETH', reason: 'Bearish divergence detected' });
-      }
-    }, 0);
+    setAiConfidence(pred.confidence);
+    if (pred.trend === 'BEARISH') {
+      setRecommendation({ from: 'XRP', to: 'ETH', reason: 'Bearish divergence detected' });
+    }
   }, []);
 
   return (
     <motion.div 
       className="ai-card glass-panel" 
-      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', willChange: 'transform, opacity' }}
       {...fadeInUp}
       transition={{ delay: 0.1, duration: 0.5 }}
       whileHover={{ scale: 1.01 }}
@@ -274,19 +271,19 @@ function AIActionPanel({ onApply }) {
       </div>
     </motion.div>
   );
-}
+});
 
-function SmartMarketPanel() {
-  const items = [
+const SmartMarketPanel = memo(function SmartMarketPanel() {
+  const items = useMemo(() => [
     { label: 'Top Yield Pools', val: 'ETH Pool → 12.5%', type: 'yield', icon: Layers, color: 'var(--accent-green)' },
     { label: 'Risk Alert', val: 'XRP volatility high', type: 'risk', icon: AlertCircle, color: 'var(--accent-red)' },
     { label: 'Trending', val: 'BTC up 3.2%', type: 'trending', icon: TrendingUp, color: 'var(--accent-blue)' },
-  ];
+  ], []);
 
   return (
     <motion.div 
       className="ai-card glass-panel" 
-      style={{ flex: 1 }}
+      style={{ flex: 1, willChange: 'transform, opacity' }}
       {...fadeInUp}
       transition={{ delay: 0.2, duration: 0.5 }}
       whileHover={{ scale: 1.01 }}
@@ -309,7 +306,7 @@ function SmartMarketPanel() {
       </div>
     </motion.div>
   );
-}
+});
 
 // --- Main Pages ---
 
@@ -395,7 +392,7 @@ function VaultDashboard() {
                     <Area 
                       type="monotone" 
                       dataKey="uv" 
-                      data={data.filter((d, i) => i >= data.length - 11)}
+                      data={useMemo(() => data.filter((d, i) => i >= data.length - 11), [data])}
                       stroke="var(--accent-blue)" 
                       strokeWidth={2}
                       strokeDasharray="5 5"
@@ -511,6 +508,7 @@ function VaultDashboard() {
 
 function AppShell() {
   const [balance] = useState(21340.50);
+  const location = useLocation();
 
   return (
     <div className="vault-shell">

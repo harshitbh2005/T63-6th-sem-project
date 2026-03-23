@@ -49,6 +49,7 @@ h1, h2, h3, .brand {
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   box-shadow: var(--card-glow);
+  will-change: backdrop-filter, transform, opacity;
 }
 
 .hover-glow:hover {
@@ -117,6 +118,7 @@ h1, h2, h3, .brand {
   color: var(--text-muted);
   cursor: pointer;
   gap: 16px;
+  will-change: transform, background-color;
 }
 
 .nav-item svg {
