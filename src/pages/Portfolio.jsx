@@ -11,12 +11,6 @@ import {
 import { mlEngine } from '../services/mlEngine';
 import { motion } from 'framer-motion';
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
-};
-
 const PORTFOLIO_DATA = [
   { name: 'BTC', value: 46.7, color: '#f59e0b', current: 9962.21, recommended: 50.0 },
   { name: 'ETH', value: 37.9, color: 'var(--accent-blue)', current: 8078.84, recommended: 35.0 },

@@ -180,19 +180,17 @@ const AIControlPanel = memo(function AIControlPanel() {
 });
 
 const AIInsightsBox = memo(function AIInsightsBox() {
-  const [insight, setInsight] = useState("Scanning markets for yield opportunities...");
-  const [metrics, setMetrics] = useState({ return: 0, risk: 0 });
-
-  useEffect(() => {
-    // Simulate ML insight generation
+  const [insight, setInsight] = useState(() => {
     const mockPortfolio = { assets: [{ name: 'ETH', yield: '12.5%', risk: 'Low' }] };
+    return mlEngine.getInsight(mockPortfolio, 'BULLISH');
+  });
+  const [metrics, setMetrics] = useState(() => {
     const pred = mlEngine.predictMarket('ETH');
-    setInsight(mlEngine.getInsight(mockPortfolio, 'BULLISH'));
-    setMetrics({ 
+    return { 
       return: pred.confidence / 50, 
       risk: (Math.random() * 15 + 5).toFixed(0) 
-    });
-  }, []);
+    };
+  });
 
   const explainAI = useMemo(() => JSON.parse(localStorage.getItem('vaultai_explain_ai')) ?? true, []);
 
@@ -223,17 +221,15 @@ const AIInsightsBox = memo(function AIInsightsBox() {
 });
 
 const AIActionPanel = memo(function AIActionPanel({ onApply }) {
-  const [recommendation, setRecommendation] = useState({ from: 'XRP', to: 'USDT', reason: 'High volatility' });
-  // eslint-disable-next-line no-unused-vars
-  const [aiConfidence, setAiConfidence] = useState(94.2);
-
-  useEffect(() => {
+  const [recommendation, setRecommendation] = useState(() => {
     const pred = mlEngine.predictMarket('XRP');
-    setAiConfidence(pred.confidence);
     if (pred.trend === 'BEARISH') {
-      setRecommendation({ from: 'XRP', to: 'ETH', reason: 'Bearish divergence detected' });
+      return { from: 'XRP', to: 'ETH', reason: 'Bearish divergence detected' };
     }
-  }, []);
+    return { from: 'XRP', to: 'USDT', reason: 'High volatility' };
+  });
+  
+  const [aiConfidence] = useState(() => mlEngine.predictMarket('XRP').confidence);
 
   return (
     <motion.div 
@@ -312,6 +308,7 @@ const SmartMarketPanel = memo(function SmartMarketPanel() {
 
 function VaultDashboard() {
   const [data] = useState(generateData());
+  const predictionData = useMemo(() => data.filter((d, i) => i >= data.length - 11), [data]);
   const [timeRange, setTimeRange] = useState('24H');
   const [toast, setToast] = useState(null);
 
@@ -392,7 +389,7 @@ function VaultDashboard() {
                     <Area 
                       type="monotone" 
                       dataKey="uv" 
-                      data={useMemo(() => data.filter((d, i) => i >= data.length - 11), [data])}
+                      data={predictionData}
                       stroke="var(--accent-blue)" 
                       strokeWidth={2}
                       strokeDasharray="5 5"
