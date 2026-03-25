@@ -15,7 +15,7 @@ export default function Watchlist() {
   };
 
   // ✅ Fetch from backend
-  useEffect(() => {
+  const fetchWatchlist = () => {
     fetch("http://localhost:8080/api/watchlist")
       .then(res => res.json())
       .then(data => {
@@ -28,7 +28,6 @@ export default function Watchlist() {
 
         setWatchlist(formatted);
 
-        // initialize alerts
         const initialAlerts = {};
         data.forEach(item => {
           initialAlerts[item.id] = false;
@@ -36,7 +35,23 @@ export default function Watchlist() {
         setAlerts(initialAlerts);
       })
       .catch(err => console.error(err));
+  };
+
+  useEffect(() => {
+    fetchWatchlist();
   }, []);
+
+  // ✅ DELETE FUNCTION
+  const deleteCoin = (id) => {
+    fetch(`http://localhost:8080/api/watchlist/${id}`, {
+      method: "DELETE"
+    })
+      .then(() => {
+        // remove from UI instantly
+        setWatchlist(prev => prev.filter(item => item.id !== id));
+      })
+      .catch(err => console.error(err));
+  };
 
   return (
     <div className="main-content">
@@ -103,6 +118,20 @@ export default function Watchlist() {
                 );
               })()}
             </div>
+
+            {/* ✅ DELETE BUTTON */}
+            <button
+              onClick={() => deleteCoin(item.id)}
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                color: 'red',
+                fontSize: '12px'
+              }}
+            >
+              Delete
+            </button>
 
             <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px' }}>
               <div style={{ fontSize: '9px', marginBottom: '8px' }}>
