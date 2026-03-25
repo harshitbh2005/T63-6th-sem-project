@@ -1,188 +1,103 @@
-import React, { useState } from 'react';
-import { 
-  ArrowUpRight, ArrowDownRight, TrendingUp, Shield, Activity, 
-  Layers, CheckCircle, AlertCircle, Info, Target, Zap
+import React, { useEffect, useState } from 'react';
+import {
+  ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown,
+  Shield, Activity
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, 
-  CartesianGrid, XAxis, YAxis, Tooltip
-} from 'recharts';
-
-import { mlEngine } from '../services/mlEngine';
 import { motion } from 'framer-motion';
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
-};
-
-const PORTFOLIO_DATA = [
-  { name: 'BTC', value: 46.7, color: '#f59e0b', current: 9962.21, recommended: 50.0 },
-  { name: 'ETH', value: 37.9, color: 'var(--accent-blue)', current: 8078.84, recommended: 35.0 },
-  { name: 'SOL', value: 8.6, color: 'var(--accent-green)', current: 1842.15, recommended: 10.0 },
-  { name: 'XRP', value: 5.9, color: 'var(--accent-purple)', current: 1258.40, recommended: 4.0 },
-  { name: 'ADA', value: 1.0, color: 'var(--accent-red)', current: 208.65, recommended: 1.0 },
-];
-
-const HISTORY = [
-  { id: 1, type: 'Rebalance', asset: 'ETH → USDT', amount: '$1,200', date: '2026-03-18', status: 'Completed', icon: CheckCircle, color: 'var(--accent-green)' },
-  { id: 2, type: 'Optimization', asset: 'Portfolio Risk Reduced', amount: '-15%', date: '2026-03-17', status: 'AI System', icon: Shield, color: 'var(--accent-blue)' },
-  { id: 3, type: 'Yield Claim', asset: 'Spark Pool Rewards', amount: '+0.042 ETH', date: '2026-03-16', status: 'Auto', icon: Zap, color: 'var(--accent-orange)' },
-];
-
 export default function Portfolio() {
-  const [analysis] = useState(mlEngine.analyzePortfolio(PORTFOLIO_DATA));
-  const [optimizedData] = useState(mlEngine.optimizeAllocation(PORTFOLIO_DATA));
+
+  const [portfolio, setPortfolio] = useState([]);
+  const [summary, setSummary] = useState(null);
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/portfolio")
+      .then(res => res.json())
+      .then(data => setPortfolio(data));
+
+    fetch("http://localhost:8080/api/portfolio/summary")
+      .then(res => res.json())
+      .then(data => setSummary(data));
+  }, []);
 
   return (
-    <div className="main-content" style={{ paddingBottom: '24px' }}>
+    <div className="main-content">
+
+      {/* HEADER */}
       <div className="ai-header" style={{ marginBottom: '12px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '700' }}>AI Portfolio Manager</h2>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="ai-btn-secondary" style={{ padding: '8px 16px', fontSize: '12px' }}>Download Report</button>
-          <button className="ai-btn-primary" style={{ padding: '8px 16px', fontSize: '12px' }}>Rebalance Now</button>
-        </div>
+        <h2 style={{ fontSize: '20px', fontWeight: '700' }}>Portfolio</h2>
       </div>
 
-      <div className="content-row">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* Summary Cards */}
-          <div className="content-row-full" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            {[
-              { label: 'Total Value', val: `$${analysis.totalValue.toLocaleString()}`, sub: '+21.9% all time', col: 'var(--accent-blue)' },
-              { label: 'AI Yield (MTD)', val: `+${analysis.avgYield}%`, sub: 'Projected yield', col: 'var(--accent-green)' },
-              { label: 'Risk Score', val: `${analysis.riskScore}/100`, sub: `${analysis.riskLevel} RISK`, col: analysis.riskScore > 60 ? 'var(--accent-orange)' : 'var(--accent-green)' },
-              { label: 'Efficiency', val: '94%', sub: 'High Optimization', col: 'var(--accent-blue)' },
-            ].map((stat, i) => (
-              <motion.div 
-                key={i} 
-                className="glass-panel ai-card" 
-                style={{ padding: '16px' }}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ scale: 1.03 }}
-              >
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{stat.label}</div>
-                <div style={{ fontSize: '20px', fontWeight: '700', margin: '4px 0' }}>{stat.val}</div>
-                <div style={{ fontSize: '11px', color: stat.col }}>{stat.sub}</div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Allocation Comparison */}
-          <motion.div 
-            className="glass-panel ai-card"
-            whileHover={{ scale: 1.01 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          >
-            <div className="ai-card-title">
-              <Layers size={14} color="var(--accent-blue)" /> Core Allocation & AI Recommendations
-            </div>
-            
-            <div className="smart-list" style={{ marginTop: '10px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', padding: '0 12px', marginBottom: '8px', fontSize: '10px', color: 'var(--text-muted)' }}>
-                <span>ASSET</span> <span>CURRENT WEIGHT</span> <span>AI TARGET</span>
+      {/* SUMMARY CARDS */}
+      {summary && (
+        <div className="content-row-full" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {[
+            { label: 'Total Investment', val: `$${summary.totalInvestment.toFixed(2)}` },
+            { label: 'Current Value', val: `$${summary.currentValue.toFixed(2)}` },
+            { label: 'Total Profit', val: `$${summary.totalProfit.toFixed(2)}` },
+          ].map((stat, i) => (
+            <motion.div
+              key={i}
+              className="glass-panel ai-card"
+              style={{ padding: '16px' }}
+              whileHover={{ scale: 1.03 }}
+            >
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{stat.label}</div>
+              <div style={{ fontSize: '20px', fontWeight: '700', marginTop: '5px' }}>
+                {stat.val}
               </div>
-              {optimizedData.map((item, i) => (
-                <motion.div 
-                  key={i} 
-                  className="smart-item" 
-                  style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', cursor: 'default' }}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + i * 0.05 }}
-                  whileHover={{ backgroundColor: "var(--bg-panel-hover)" }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '2px', background: item.color }}></div>
-                    <span style={{ fontWeight: '600' }}>{item.name}</span>
-                  </div>
-                  <div style={{ paddingRight: '20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                      <span>{item.value}%</span>
-                    </div>
-                    <div className="risk-meter-container" style={{ height: '4px' }}>
-                      <motion.div 
-                        className="risk-meter-fill" 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${item.value}%` }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                        style={{ background: item.color }}
-                      ></motion.div>
-                    </div>
-                  </div>
-                  <div style={{ paddingRight: '20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                      <span>{item.recommended.toFixed(1)}%</span>
-                      {item.recommended > item.value ? 
-                        <span style={{color: 'var(--accent-green)'}}>Increase</span> : 
-                        <span style={{color: 'var(--accent-red)'}}>Reduce</span>}
-                    </div>
-                    <div className="risk-meter-container" style={{ height: '4px', background: 'rgba(255,255,255,0.02)' }}>
-                      <motion.div 
-                        className="risk-meter-fill" 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${item.recommended}%` }}
-                        transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-                        style={{ background: item.color, opacity: 0.4 }}
-                      ></motion.div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+            </motion.div>
+          ))}
         </div>
+      )}
 
-        {/* Right Info Panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <motion.div 
-            className="glass-panel ai-card"
-            whileHover={{ scale: 1.02 }}
-          >
-            <div className="ai-card-title">
-              <Shield size={14} color="var(--accent-blue)" /> Risk Analysis
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '36px', fontWeight: '800', color: 'var(--accent-blue)' }}>{analysis.riskScore}</div>
-              <div style={{ color: analysis.riskScore > 60 ? 'var(--accent-orange)' : 'var(--accent-green)', fontWeight: '600', fontSize: '12px' }}>{analysis.riskLevel} RISK</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                {mlEngine.getInsight({ assets: PORTFOLIO_DATA }, 'BULLISH')}
-              </div>
-              <div className="risk-meter-container" style={{ height: '10px', marginTop: '16px' }}>
-                <div className="risk-meter-fill" style={{ width: `${analysis.riskScore}%`, background: 'linear-gradient(90deg, var(--accent-green) 0%, var(--accent-orange) 50%, var(--accent-red) 100%)' }}></div>
-              </div>
-            </div>
-          </motion.div>
+      {/* PORTFOLIO LIST */}
+      <div className="content-row-full" style={{ marginTop: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+        {portfolio.map((item, index) => {
+          const isProfit = item.profit >= 0;
 
-          <div className="glass-panel ai-card" style={{ flex: 1 }}>
-            <div className="ai-card-title">
-              <Activity size={14} color="var(--accent-green)" /> AI Activity Log
-            </div>
-            <div className="smart-list" style={{ marginTop: '12px' }}>
-              {HISTORY.map(log => (
-                <div key={log.id} style={{ display: 'flex', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '8px', background: `${log.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <log.icon size={14} color={log.color} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '12px', fontWeight: '600' }}>{log.asset}</div>
-                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{log.type} • {log.date}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: log.color }}>{log.amount}</div>
-                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{log.status}</div>
+          return (
+            <motion.div
+              key={index}
+              className="glass-panel ai-card"
+              style={{ padding: '20px' }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.03 }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontWeight: '700', fontSize: '16px' }}>{item.symbol}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    Qty: {item.quantity}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '14px' }}>
+                    ${item.currentPrice.toFixed(2)}
+                  </div>
+
+                  <div style={{
+                    fontSize: '12px',
+                    color: isProfit ? 'var(--accent-green)' : 'var(--accent-red)'
+                  }}>
+                    {isProfit ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                    ${item.profit.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                Buy Price: ${item.buyPrice}
+              </div>
+
+            </motion.div>
+          );
+        })}
       </div>
+
     </div>
   );
 }
-
-// Final AI Optimization Layer

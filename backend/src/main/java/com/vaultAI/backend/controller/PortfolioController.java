@@ -33,8 +33,6 @@ public class PortfolioController {
     // ✅ NEW: total investment API
     @GetMapping("/summary")
     public Map<String, Double> getSummary() {
-        Map<String, Double> data = new HashMap<>();
-        data.put("totalInvestment", service.getTotalInvestment());
-        return data;
+        return service.getSummary();
     }
 }
