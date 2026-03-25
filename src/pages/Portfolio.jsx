@@ -5,10 +5,11 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function Portfolio() {
 
+export default function Portfolio() {
   const [portfolio, setPortfolio] = useState([]);
   const [summary, setSummary] = useState(null);
+
 
   useEffect(() => {
     fetch("http://localhost:8080/api/portfolio")
