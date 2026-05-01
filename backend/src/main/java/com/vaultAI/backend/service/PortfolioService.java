@@ -1,7 +1,7 @@
-package com.vaultAI.backend.service;
+package com.vaultai.backend.service;
 
-import com.vaultAI.backend.model.Portfolio;
-import com.vaultAI.backend.repository.PortfolioRepository;
+import com.vaultai.backend.model.Portfolio;
+import com.vaultai.backend.repository.PortfolioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 

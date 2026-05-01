@@ -1,7 +1,7 @@
-package com.vaultAI.backend.service;
+package com.vaultai.backend.service;
 
-import com.vaultAI.backend.model.Watchlist;
-import com.vaultAI.backend.repository.WatchlistRepository;
+import com.vaultai.backend.model.Watchlist;
+import com.vaultai.backend.repository.WatchlistRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

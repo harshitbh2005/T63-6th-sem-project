@@ -1,4 +1,4 @@
-package com.vaultAI.backend.model;
+package com.vaultai.backend.model;
 
 public class ProfileResponse {
 

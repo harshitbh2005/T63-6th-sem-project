@@ -1,104 +1,172 @@
-import React, { useEffect, useState } from 'react';
-import {
-  ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown,
-  Shield, Activity
-} from 'lucide-react';
-import { motion } from 'framer-motion';
-
+import { useEffect, useState } from "react";
 
 export default function Portfolio() {
   const [portfolio, setPortfolio] = useState([]);
-  const [summary, setSummary] = useState(null);
-
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/portfolio")
-      .then(res => res.json())
-      .then(data => setPortfolio(data));
-
-    fetch("http://localhost:8080/api/portfolio/summary")
-      .then(res => res.json())
-      .then(data => setSummary(data));
+    fetchPortfolio();
+    fetchRecommendations();
   }, []);
 
+  // 🔥 FETCH PORTFOLIO
+  const fetchPortfolio = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/portfolio");
+      const data = await res.json();
+
+      console.log("PORTFOLIO:", data);
+      setPortfolio(data);
+    } catch (err) {
+      console.error("Portfolio fetch failed", err);
+    }
+  };
+
+  // 🔥 FETCH ML RECOMMENDATIONS
+  const fetchRecommendations = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/recommendations");
+
+      if (!res.ok) throw new Error("ML failed");
+
+      const data = await res.json();
+
+      console.log("RECOMMENDATIONS:", data);
+      setRecommendations(data);
+    } catch (err) {
+      setRecommendations([
+        {
+          coin: "ERROR",
+          action: "HOLD",
+          reason: "ML service not responding",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔥 SELL FUNCTION
+  const handleSell = async (id) => {
+    const confirmSell = window.confirm("Are you sure you want to sell this asset?");
+    if (!confirmSell) return;
+
+    try {
+      await fetch(`http://localhost:8080/api/portfolio/${id}`, {
+        method: "DELETE",
+      });
+
+      // update UI instantly
+      setPortfolio((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      console.error("Sell failed", err);
+    }
+  };
+
   return (
-    <div className="main-content">
+    <div
+      style={{
+        padding: "20px",
+        color: "white",
+        height: "100vh",
+        overflowY: "auto",
+      }}
+    >
+      <h1>Your Portfolio</h1>
 
-      {/* HEADER */}
-      <div className="ai-header" style={{ marginBottom: '12px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '700' }}>Portfolio</h2>
-      </div>
+      {/* 🔥 AI RECOMMENDATIONS (TOP GRID) */}
+      <h2 style={{ marginTop: "20px" }}>AI Recommendations</h2>
 
-      {/* SUMMARY CARDS */}
-      {summary && (
-        <div className="content-row-full" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-          {[
-            { label: 'Total Investment', val: `$${summary.totalInvestment.toFixed(2)}` },
-            { label: 'Current Value', val: `$${summary.currentValue.toFixed(2)}` },
-            { label: 'Total Profit', val: `$${summary.totalProfit.toFixed(2)}` },
-          ].map((stat, i) => (
-            <motion.div
+      {loading && <p>Loading recommendations...</p>}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: "15px",
+          marginTop: "15px",
+        }}
+      >
+        {!loading &&
+          recommendations.map((rec, i) => (
+            <div
               key={i}
-              className="glass-panel ai-card"
-              style={{ padding: '16px' }}
-              whileHover={{ scale: 1.03 }}
+              style={{
+                padding: "12px",
+                border: "1px solid #2a3b5f",
+                borderRadius: "10px",
+                background: "#0f172a",
+              }}
             >
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{stat.label}</div>
-              <div style={{ fontSize: '20px', fontWeight: '700', marginTop: '5px' }}>
-                {stat.val}
-              </div>
-            </motion.div>
+              <h4 style={{ margin: 0 }}>{rec.coin}</h4>
+
+              <p style={{ margin: "5px 0" }}>
+                <b
+                  style={{
+                    color:
+                      rec.action.includes("BUY")
+                        ? "green"
+                        : rec.action.includes("SELL")
+                        ? "red"
+                        : "orange",
+                  }}
+                >
+                  {rec.action}
+                </b>
+              </p>
+
+              <p style={{ fontSize: "12px", opacity: 0.7 }}>
+                {rec.reason}
+              </p>
+            </div>
           ))}
-        </div>
-      )}
-
-      {/* PORTFOLIO LIST */}
-      <div className="content-row-full" style={{ marginTop: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-        {portfolio.map((item, index) => {
-          const isProfit = item.profit >= 0;
-
-          return (
-            <motion.div
-              key={index}
-              className="glass-panel ai-card"
-              style={{ padding: '20px' }}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.03 }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontWeight: '700', fontSize: '16px' }}>{item.symbol}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                    Qty: {item.quantity}
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '14px' }}>
-                    ${item.currentPrice.toFixed(2)}
-                  </div>
-
-                  <div style={{
-                    fontSize: '12px',
-                    color: isProfit ? 'var(--accent-green)' : 'var(--accent-red)'
-                  }}>
-                    {isProfit ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                    ${item.profit.toFixed(2)}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                Buy Price: ${item.buyPrice}
-              </div>
-
-            </motion.div>
-          );
-        })}
       </div>
 
+      {/* 🔥 PORTFOLIO SECTION */}
+      <h2 style={{ marginTop: "40px" }}>Your Assets</h2>
+
+      {portfolio.length === 0 ? (
+        <p>No assets added</p>
+      ) : (
+        portfolio.map((item, i) => (
+          <div
+            key={i}
+            style={{
+              marginTop: "10px",
+              padding: "15px",
+              border: "1px solid #2a3b5f",
+              borderRadius: "10px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              background: "#0f172a",
+            }}
+          >
+            <div>
+              <h3>{item.symbol}</h3>
+              <p>Quantity: {item.quantity}</p>
+              <p>Buy Price: ${item.buyPrice}</p>
+            </div>
+
+            {/* 🔥 SELL BUTTON */}
+            <button
+              onClick={() => handleSell(item.id)}
+              style={{
+                background: "#ef4444",
+                border: "none",
+                padding: "10px 15px",
+                borderRadius: "8px",
+                color: "white",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              Sell
+            </button>
+          </div>
+        ))
+      )}
     </div>
   );
 }

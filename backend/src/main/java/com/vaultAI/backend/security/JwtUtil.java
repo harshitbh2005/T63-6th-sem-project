@@ -1,4 +1,4 @@
-package com.vaultAI.backend.security;
+package com.vaultai.backend.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

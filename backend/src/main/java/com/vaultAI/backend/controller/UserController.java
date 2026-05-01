@@ -1,7 +1,7 @@
-package com.vaultAI.backend.controller;
+package com.vaultai.backend.controller;
 
-import com.vaultAI.backend.model.ProfileResponse;
-import com.vaultAI.backend.service.WatchlistService;
+import com.vaultai.backend.model.ProfileResponse;
+import com.vaultai.backend.service.WatchlistService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

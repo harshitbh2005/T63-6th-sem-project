@@ -1,14 +1,8 @@
 /**
- * VaultAI ML Intelligence Engine (Simulated)
- * 
- * This engine simulates real-time DeFi portfolio optimization using 
- * trend analysis, risk scoring models, and yield projection logic.
+ * VaultAI ML Intelligence Engine (Simulated + Real API)
  */
 
 export const mlEngine = {
-  /**
-   * Analyzes an array of assets and returns an aggregate risk and yield report.
-   */
   analyzePortfolio(assets) {
     const totalValue = assets.reduce((sum, a) => sum + (a.current || 0), 0);
     const avgRisk = assets.reduce((sum, a) => {
@@ -20,18 +14,16 @@ export const mlEngine = {
       totalValue,
       riskScore: Math.round(avgRisk),
       riskLevel: avgRisk < 40 ? 'LOW' : avgRisk < 70 ? 'MODERATE' : 'HIGH',
-      avgYield: assets.reduce((sum, a) => sum + (parseFloat(a.yield || 0) * (a.value / 100)), 0).toFixed(1)
+      avgYield: assets
+        .reduce((sum, a) => sum + (parseFloat(a.yield || 0) * (a.value / 100)), 0)
+        .toFixed(1)
     };
   },
 
-  /**
-   * Generates market predictions for assets.
-   */
   predictMarket(symbol) {
-    // Simulated prediction logic based on symbol volatility
-    const volatilityMap = { 'BTC': 0.12, 'ETH': 0.18, 'SOL': 0.35, 'XRP': 0.45, 'ADA': 0.25 };
+    const volatilityMap = { BTC: 0.12, ETH: 0.18, SOL: 0.35, XRP: 0.45, ADA: 0.25 };
     const baseVol = volatilityMap[symbol.split('/')[0]] || 0.2;
-    
+
     return {
       predictedMove: (Math.random() * baseVol * 2 - baseVol).toFixed(2),
       confidence: (85 + Math.random() * 10).toFixed(1),
@@ -40,24 +32,16 @@ export const mlEngine = {
     };
   },
 
-  /**
-   * Optimizes allocation percentages based on market conditions.
-   */
   optimizeAllocation(currentAssets) {
-    // Simulation: Reduce High Risk, Increase Yield-Bearing assets
     return currentAssets.map(asset => {
       let recommended = asset.value;
       if (asset.risk === 'High') recommended -= 5;
       if (parseFloat(asset.yield) > 10) recommended += 5;
-      
-      // Normalize to 100% (simplified simulation)
+
       return { ...asset, recommended: Math.max(1, recommended) };
     });
   },
 
-  /**
-   * Generates a narrative insight based on current state.
-   */
   getInsight(portfolioData, marketTrend) {
     const highYield = portfolioData.assets.find(a => parseFloat(a.yield) > 10);
     const highRisk = portfolioData.assets.find(a => a.risk === 'High');
@@ -69,5 +53,17 @@ export const mlEngine = {
       return `${highYield.name} yield is currently outperforming the market at ${highYield.yield}. Optimized strategy maintains overweight position to maximize MTD returns.`;
     }
     return "Portfolio is aligned with Balanced Growth strategy. No critical interventions required at this timestamp.";
+  }
+};
+
+
+// 🔥 REAL ML API (Spring Boot → FastAPI)
+export const getRealRecommendations = async () => {
+  try {
+    const res = await fetch("http://localhost:8080/api/recommendations");
+    return await res.json();
+  } catch (error) {
+    console.error("ML API error:", error);
+    return [];
   }
 };

@@ -1,8 +1,8 @@
-package com.vaultAI.backend.controller;
+package com.vaultai.backend.controller;
 
-import com.vaultAI.backend.model.User;
-import com.vaultAI.backend.service.AuthService;
-import com.vaultAI.backend.security.JwtUtil;
+import com.vaultai.backend.model.User;
+import com.vaultai.backend.service.AuthService;
+import com.vaultai.backend.security.JwtUtil;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

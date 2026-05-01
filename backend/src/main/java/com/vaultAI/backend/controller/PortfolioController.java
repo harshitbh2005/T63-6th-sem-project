@@ -1,38 +1,37 @@
-package com.vaultAI.backend.controller;
+package com.vaultai.backend.controller;
 
-import java.util.Map;
-import com.vaultAI.backend.model.Portfolio;
-import com.vaultAI.backend.service.PortfolioService;
+import com.vaultai.backend.model.Portfolio;
+import com.vaultai.backend.repository.PortfolioRepository;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/portfolio")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin
 public class PortfolioController {
 
-    private final PortfolioService service;
+    private final PortfolioRepository portfolioRepository;
 
-    public PortfolioController(PortfolioService service) {
-        this.service = service;
+    public PortfolioController(PortfolioRepository portfolioRepository) {
+        this.portfolioRepository = portfolioRepository;
     }
 
-    @PostMapping
-    public Portfolio add(@RequestBody Portfolio portfolio) {
-        return service.add(portfolio);
-    }
-
+    // ✅ GET all portfolio
     @GetMapping
-    public List<Map<String, Object>> getAll() {
-        return service.getAll();
+    public List<Portfolio> getPortfolio() {
+        return portfolioRepository.findAll();
     }
 
-    // ✅ NEW: total investment API
-    @GetMapping("/summary")
-    public Map<String, Double> getSummary() {
-        return service.getSummary();
+    // ✅ ADD coin
+    @PostMapping
+    public Portfolio addPortfolio(@RequestBody Portfolio portfolio) {
+        return portfolioRepository.save(portfolio);
+    }
+
+    // ✅ DELETE coin
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        portfolioRepository.deleteById(id);
     }
 }

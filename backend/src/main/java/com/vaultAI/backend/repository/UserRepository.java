@@ -1,6 +1,6 @@
-package com.vaultAI.backend.repository;
+package com.vaultai.backend.repository;
 
-import com.vaultAI.backend.model.User;
+import com.vaultai.backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

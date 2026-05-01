@@ -1,7 +1,7 @@
-package com.vaultAI.backend.service;
+package com.vaultai.backend.service;
 
-import com.vaultAI.backend.model.User;
-import com.vaultAI.backend.repository.UserRepository;
+import com.vaultai.backend.model.User;
+import com.vaultai.backend.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 

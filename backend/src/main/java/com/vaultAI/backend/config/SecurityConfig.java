@@ -1,4 +1,4 @@
-package com.vaultAI.backend.config;
+package com.vaultai.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

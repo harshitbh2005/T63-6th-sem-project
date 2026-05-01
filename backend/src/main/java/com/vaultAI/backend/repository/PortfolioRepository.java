@@ -1,6 +1,6 @@
-package com.vaultAI.backend.repository;
+package com.vaultai.backend.repository;
 
-import com.vaultAI.backend.model.Portfolio;
+import com.vaultai.backend.model.Portfolio;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PortfolioRepository extends JpaRepository<Portfolio, Long> {
